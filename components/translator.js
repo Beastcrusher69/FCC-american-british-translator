@@ -5,69 +5,66 @@ const britishOnly = require('./british-only.js')
 
 class Translator {
 
-  americanToBritish(text) {
+    americanToBritish(text) {
+        const wordDiffAndSpelling = {...americanOnly, ...americanToBritishSpelling }
+        const titles = americanToBritishTitles;
 
-    let AToBDict = { ...americanOnly, ...americanToBritishSpelling };
-    let AToBTitles = americanToBritishTitles;
-
-    return this.translat(text, AToBDict, AToBTitles);
-  }
-
-  britishToAmerian(text) {
-
-    let BritishToAmericanSpelling = objectFlip(americanToBritishSpelling)
-    BToADict = { ...britishOnly, ...BritishToAmericanSpelling };
-    BToATitles = ObjectFlip(americanToBritishTitles);
-
-    return this.translat(text, BToADict, BToATitles);
-
-  }
-
-  translat(text, dict, titles) {
-    let textLowerCase = text.toLowerCase();
-    let translated;
-    const timeRegex = /(([0-9]|0[0-9]|1[0-9]|2[0-3])(:|\.)([0-5][0-9]))/g;
-
-    Object.entries(titles)
-      .map(([key, value]) => {
-        if (textLowerCase.includes(key)) {
-          translated = text.replace(new RegExp(key, "gi"), `<span class="highlight">${this.capitalizeFirstLetter(value)}</span>`) || text;
-        }
-      })
-
-    translated = translated || text;
-
-    const changeTime = textLowerCase.match(timeRegex);
-    if (changeTime) {
-      changeTime.map(time => {
-        translated = translated.replace(time, `<span class="highlight">${time.replace(':', '.')}</span>`) || text;
-      })
+        return this.translat(text, wordDiffAndSpelling, titles)
     }
 
-    Object.entries(dict).map(([key, value]) => {
+    britishToAmerican(text) {
+            const britishToAmericanSpelling = this.objectFlip(americanToBritishSpelling)
+            const wordDiffAndSpelling = {...britishOnly, ...britishToAmericanSpelling }
+            const britishToAmericanTitles = this.objectFlip(americanToBritishTitles);
 
-      if (new RegExp('${key}', 'gi').test(textLowerCase)) {
-        translated = translated.replace(key, '<span class="highlight">${value}</span>') || text;
-      };
+            return this.translat(text, wordDiffAndSpelling, britishToAmericanTitles);
 
-      return translated || text;
-    })
-  }
+        }
+        
+    translat(text, wordDiffAndSpelling, titles) {
+        const textLowerCase = text.toLowerCase();
+        let translated;
+        const timeRegex = /(([0-9]|0[0-9]|1[0-9]|2[0-3])(:|\.)([0-5][0-9]))/g;
 
-  objectFlip(obj) {
-    return Object.entries(obj).reduce((acc, [key, value]) => {
-      acc[value] = key;
-    }, {});
-  }
+        Object.entries(titles) 
+            .map(([key, value]) => {
+                if (textLowerCase.includes(key)) {
+                    translated = text.replace(new RegExp(key, "gi"), `<span class="highlight">${this.capitalizeFirstLetter(value)}</span>`) || text;
+                }
+            })
 
-  capitalizeFirstLetter(text) {
-    let arr = text.split('');
+        translated = translated || text; 
+      
+        const changeTime = textLowerCase.match(timeRegex); 
+      if (changeTime) {
+            changeTime.map(time => {
+                translated = translated.replace(time, `<span class="highlight">${time.replace(':', '.')}</span>`) || text;
+            })
+        }
 
-    arr[0].toUpperCase();
+       
+        Object.entries(wordDiffAndSpelling)
+            .map(([key, value]) => {
+                if (new RegExp(`${key} `, "gi").test(textLowerCase) ||
+                    new RegExp(`${key}[^A-Za-z]`, "gi").test(textLowerCase) ||
+                    new RegExp(`${key}$`, "gi").test(textLowerCase)) {
 
-    return arr.join();
-  }
+                    translated = translated.replace(new RegExp(key, "gi"), `<span class="highlight">${value}</span>`) || text;
+                }
+            });
 
+        return translated || text;
+    }
+
+   
+    objectFlip(obj) {
+        return Object.entries(obj).reduce((acc, [key, value]) => (acc[value] = key, acc), {})
+    }
+
+    
+    capitalizeFirstLetter(word) {
+        return word[0].toUpperCase() + word.slice(1);
+    }
 }
 
 module.exports = Translator;

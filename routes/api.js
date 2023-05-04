@@ -5,10 +5,7 @@ const Translator = require('../components/translator.js');
 module.exports = function (app) {
   
   const translator = new Translator();
-  console.log(translator);
-  console.log(translator.americanToBritish);
   
-
   app.route('/api/translate')
     .post((req, res) => {
 
@@ -24,6 +21,8 @@ module.exports = function (app) {
         return;
       }
 
+      console.log(locale);
+
       if(locale != "american-to-british" && locale != "british-to-american"){
         res.json({ error: 'Invalid value for locale field' });
         return;
@@ -35,15 +34,17 @@ module.exports = function (app) {
         translation = translator.americanToBritish(text);
       }
       else{
-        translation = translator.britishToAmerian(text); 
+        translation = translator.britishToAmercian(text); 
       }
 
 
       if(translation === text){
-        res.send("Everything looks good to me!");
-        return ;
+       translation = "Everything looks good to me!";
       }
-    
+
+      console.log(text);
+      console.log(translation);
+      
       res.json({
         text , translation
       });
